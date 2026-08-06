@@ -19,3 +19,7 @@ Output record schema (one dict per document):
 - status: "Valid:good", "Missing:critical", "Low Confidence:warning", or "Needs Review:warning"
 - details: dict of extracted fields (carrier_mc, customer_name, load_id, carrier_pro, customer_po, pickup_date, delivery_date, origin_city, origin_state, origin_zip, destination_city, destination_state, destination_zip, equipment_type, commodity, weight, pieces, total_rate, rate_type, miles, fsc, detention_rate, lumper_fee, tonu, accessorials, payment_terms, document_type)
 - due_date: pickup_date or delivery_date in ISO-8601 (YYYY-MM-DD)
+
+Dashboard: https://small-freight-brokerage-rate-confirmatio.vokrix.co
+Vercel: small-freight-brokerage-rate-confirmatio
+Railway: 
