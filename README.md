@@ -24,3 +24,4 @@ Dashboard: https://small-freight-brokerage-rate-confirmatio.vokrix.co
 Vercel: small-freight-brokerage-rate-confirmatio
 Railway: 
 Railway: small-freight-brokerage-rate-confirmatio
+Cloudflare: small-freight-brokerage-rate-confirmatio.vokrix.co
