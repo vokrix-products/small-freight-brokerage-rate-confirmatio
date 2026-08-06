@@ -45,7 +45,7 @@ def process_job(job):
                 "source_file_path": input_file_path,
                 "due_date": item.get("due_date")
             }
-            r = requests.post(f"{BASE_URL}/records", headers=HEADERS, json=record)
+            r = requests.post(f"{BASE_URL}/records", headers={**HEADERS, "Prefer": "return=representation"}, json=record)
             r.raise_for_status()
             record_ids.append(r.json()[0]['id'])
 
