@@ -45,7 +45,8 @@ def extract_fields(text: str) -> dict:
     )
     content = response.choices[0].message.content
     try:
-        result = json.loads(content)
+        clean = content.strip().replace("'```json", "").replace("```", "").strip()
+        result = json.loads(clean)
         return result
     except json.JSONDecodeError:
         logger.error("Failed to parse AI response as JSON: %s", content)
