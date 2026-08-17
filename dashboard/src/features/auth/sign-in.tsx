@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
+const REDIRECT_TO = () => `${window.location.origin}/auth-callback`
+
 export function SignIn() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
@@ -17,7 +19,7 @@ export function SignIn() {
   const handleGoogle = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/' },
+      options: { redirectTo: REDIRECT_TO() },
     })
   }
 
@@ -27,7 +29,7 @@ export function SignIn() {
     setLoading(true)
     const { error: otpError } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: window.location.origin + '/' },
+      options: { emailRedirectTo: REDIRECT_TO() },
     })
     setLoading(false)
     if (otpError) { setError(otpError.message); return }
