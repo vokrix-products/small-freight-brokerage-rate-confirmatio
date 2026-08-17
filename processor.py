@@ -45,8 +45,11 @@ def extract_fields(text: str) -> dict:
     )
     content = response.choices[0].message.content
     try:
-        clean = content.strip().replace("'```json", "").replace("```", "").strip()
-        result = json.loads(clean)
+        start = content.find("{")
+        end = content.rfind("}")
+        if start == -1 or end == -1 or end <= start:
+            raise json.JSONDecodeError("no JSON object found", content, 0)
+        result = json.loads(content[start:end + 1])
         return result
     except json.JSONDecodeError:
         logger.error("Failed to parse AI response as JSON: %s", content)
@@ -105,7 +108,7 @@ def process_file(file_bytes: bytes) -> list[dict]:
 
     # Fallback to plain text
     if not raw_text.strip():
-        raw_text = file_bytes.decode("utf-8", errors="ignore")
+        raw_text = file_bytes.decode("utf-8", errors="ignore").lstrip("\ufeff")
         logger.info("Using plain text fallback")
 
     extracted = extract_fields(raw_text)
