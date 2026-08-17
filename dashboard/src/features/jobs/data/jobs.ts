@@ -55,7 +55,7 @@ const TRIAL_LIMIT = 3
 
 export function useTrialUsage() {
   const user = useAuthStore((state) => state.auth.user)
-  const isPaid = !!(user as any)?.app_metadata?.product_id
+  const isPaid = !!user?.product_id
   const { data: jobs } = useJobs()
   const used = jobs?.filter(j => ['pending','processing','completed'].includes(j.status)).length ?? 0
   return { used, limit: TRIAL_LIMIT, isPaid }
