@@ -1,14 +1,17 @@
 import { useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 export function SignIn() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
   const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [verifying, setVerifying] = useState(false)
   const [error, setError] = useState('')
 
   const handleGoogle = async () => {
@@ -18,8 +21,8 @@ export function SignIn() {
     })
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const sendCode = async (e?: React.FormEvent) => {
+    e?.preventDefault()
     setError('')
     setLoading(true)
     const { error: otpError } = await supabase.auth.signInWithOtp({
@@ -31,13 +34,48 @@ export function SignIn() {
     setSent(true)
   }
 
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setVerifying(true)
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token: code.trim(),
+      type: 'email',
+    })
+    setVerifying(false)
+    if (verifyError) { setError(verifyError.message); return }
+    navigate({ to: '/' })
+  }
+
   if (sent) {
     return (
       <div className='flex min-h-svh items-center justify-center p-4'>
         <div className='w-full max-w-sm space-y-4 text-center'>
           <h1 className='text-2xl font-semibold'>Check your email</h1>
-          <p className='text-sm text-muted-foreground'>We sent a magic link to <strong>{email}</strong>. Click it to sign in.</p>
-          <button onClick={() => setSent(false)} className='text-sm text-muted-foreground underline'>Use a different email</button>
+          <p className='text-sm text-muted-foreground'>We sent a sign-in code to <strong>{email}</strong>. Enter it below to sign in.</p>
+          <form onSubmit={handleVerify} className='space-y-4'>
+            <div className='space-y-2 text-left'>
+              <Label htmlFor='code'>Sign-in code</Label>
+              <Input
+                id='code'
+                inputMode='numeric'
+                autoComplete='one-time-code'
+                placeholder='6-digit code'
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                required
+              />
+            </div>
+            {error && <p className='text-sm text-destructive'>{error}</p>}
+            <Button type='submit' className='w-full' disabled={verifying}>
+              {verifying ? 'Signing in...' : 'Sign in'}
+            </Button>
+          </form>
+          <button onClick={() => { setSent(false); setCode(''); setError('') }} className='text-sm text-muted-foreground underline'>Use a different email</button>
+          <button onClick={() => sendCode()} disabled={loading} className='text-sm text-muted-foreground underline disabled:opacity-50'>
+            {loading ? 'Resending...' : 'Resend code'}
+          </button>
         </div>
       </div>
     )
@@ -60,14 +98,14 @@ export function SignIn() {
           <div className='absolute inset-0 flex items-center'><span className='w-full border-t' /></div>
           <div className='relative flex justify-center text-xs uppercase'><span className='bg-background px-2 text-muted-foreground'>or</span></div>
         </div>
-        <form onSubmit={handleSubmit} className='space-y-4'>
+        <form onSubmit={sendCode} className='space-y-4'>
           <div className='space-y-2'>
             <Label htmlFor='email'>Email</Label>
             <Input id='email' type='email' value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           {error && <p className='text-sm text-destructive'>{error}</p>}
           <Button type='submit' className='w-full' disabled={loading}>
-            {loading ? 'Sending link...' : 'Send magic link'}
+            {loading ? 'Sending code...' : 'Send sign-in code'}
           </Button>
         </form>
         <p className='text-center text-sm text-muted-foreground'>
