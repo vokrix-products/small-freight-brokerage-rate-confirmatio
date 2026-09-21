@@ -15,10 +15,13 @@ async function writeAudit(action: string, entity: string, entityId: string, user
   } catch {}
 }
 
+const RECORD_COLUMNS =
+  'id, title, status, label, priority, details, source_file_path, due_date, approved_at'
+
 async function fetchTasks(): Promise<Task[]> {
   const { data, error } = await supabase
     .from('records')
-    .select('id, title, status, label, priority, details, source_file_path, due_date')
+    .select(RECORD_COLUMNS)
     .eq('product_id', PRODUCT_ID)
     .order('created_at', { ascending: false })
 
@@ -33,6 +36,7 @@ async function fetchTasks(): Promise<Task[]> {
     details: row.details ?? null,
     source_file_path: row.source_file_path ?? null,
     due_date: row.due_date ?? null,
+    approved_at: row.approved_at ?? null,
   }))
 }
 
@@ -40,6 +44,63 @@ export function useTasks() {
   return useQuery({
     queryKey: ['tasks', PRODUCT_ID],
     queryFn: fetchTasks,
+  })
+}
+
+// Approved records only, oldest approval first so the export order matches the
+// order the user reviewed them. RLS already restricts this to the caller's rows.
+export async function fetchApprovedTasks(): Promise<Task[]> {
+  const { data, error } = await supabase
+    .from('records')
+    .select(RECORD_COLUMNS)
+    .eq('product_id', PRODUCT_ID)
+    .not('approved_at', 'is', null)
+    .order('approved_at', { ascending: true })
+
+  if (error) throw error
+
+  return (data ?? []).map((row) => ({
+    id: String(row.id),
+    title: row.title,
+    status: row.status,
+    label: row.label ?? '',
+    priority: row.priority ?? '',
+    details: row.details ?? null,
+    source_file_path: row.source_file_path ?? null,
+    due_date: row.due_date ?? null,
+    approved_at: row.approved_at ?? null,
+  }))
+}
+
+async function setApproved(ids: string[], approved: boolean): Promise<void> {
+  const { error } = await supabase
+    .from('records')
+    .update({ approved_at: approved ? new Date().toISOString() : null })
+    .in('id', ids)
+    .eq('product_id', PRODUCT_ID)
+
+  if (error) throw error
+}
+
+export function useApproveTasks() {
+  const queryClient = useQueryClient()
+  const user = useAuthStore((state) => state.auth.user)
+  return useMutation({
+    mutationFn: ({ ids, approved }: { ids: string[]; approved: boolean }) =>
+      setApproved(ids, approved),
+    onSuccess: (_, { ids, approved }) => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', PRODUCT_ID] })
+      if (user?.id) {
+        ids.forEach((id) =>
+          void writeAudit(
+            approved ? 'record.approved' : 'record.unapproved',
+            'record',
+            id,
+            user.id
+          )
+        )
+      }
+    },
   })
 }
 

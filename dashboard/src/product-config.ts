@@ -14,6 +14,8 @@ export const RECORDS_SUBTITLE = (import.meta.env.VITE_RECORDS_SUBTITLE as string
 export const FILTER_PLACEHOLDER = (import.meta.env.VITE_FILTER_PLACEHOLDER as string) ?? 'Search...'  // search box placeholder
 export const SHOW_CREATE_BUTTON = false           // true only for dispatch archetype
 export const SHOW_IMPORT_BUTTON = false           // true only if CSV import is relevant
+// true when records go through an approve-then-export flow (CSV for TMS import)
+export const SHOW_EXPORT_BUTTON = true
 
 // Derived automatically — do not edit below this line
 const ARCHETYPE_CONFIG: Record<

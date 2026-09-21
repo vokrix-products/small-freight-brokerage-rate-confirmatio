@@ -16,6 +16,9 @@ export const taskSchema = z.object({
   source_file_path: z.string().nullable().optional(),
   // Optional deadline/expiration/renewal date, if this product has one.
   due_date: z.string().nullable().optional(),
+  // Set when the user approves this record for TMS export.
+  // NULL = extracted but not yet reviewed.
+  approved_at: z.string().nullable().optional(),
 })
 
 export type Task = z.infer<typeof taskSchema>
