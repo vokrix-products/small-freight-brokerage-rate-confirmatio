@@ -7,7 +7,7 @@ export const Route = createFileRoute('/_authenticated')({
   beforeLoad: async () => {
     const { data } = await supabase.auth.getSession()
     if (!data.session) {
-      throw redirect({ to: '/sign-up' })
+      throw redirect({ to: '/sign-in' })
     }
     await syncAuthFromSession()
     // Cross-product login guard: if user is paid for a different product, sign out
@@ -18,7 +18,12 @@ export const Route = createFileRoute('/_authenticated')({
       const thisProductId = import.meta.env.VITE_PRODUCT_ID as string
       if (userProductId && userProductId !== thisProductId) {
         await supabase.auth.signOut()
-        throw redirect({ to: '/sign-up' })
+        try {
+          sessionStorage.setItem('auth_guard_error', 'wrong_product')
+        } catch {
+          /* ignore storage failures */
+        }
+        throw redirect({ to: '/sign-in' })
       }
     }
     // Write audit log for session start (once per browser session)
@@ -37,7 +42,7 @@ export const Route = createFileRoute('/_authenticated')({
     const welcomeKey = `welcome_sent_${data.session.user.email}`
     if (!localStorage.getItem(welcomeKey)) {
       localStorage.setItem(welcomeKey, '1')
-      fetch('https://web-production-6adc6.up.railway.app/send-welcome', {
+      fetch('https://web-production-6adc0.up.railway.app/send-welcome', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
