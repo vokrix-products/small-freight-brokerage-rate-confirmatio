@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,20 @@ export function SignIn() {
   const [loading, setLoading] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem('auth_guard_error') === 'wrong_product') {
+        sessionStorage.removeItem('auth_guard_error')
+        setNotice(
+          'That account is registered to a different Vokrix product, so it cannot sign in here. Use a different email, or start a free trial.'
+        )
+      }
+    } catch {
+      /* ignore storage failures */
+    }
+  }, [])
 
   const handleGoogle = async () => {
     await supabase.auth.signInWithOAuth({
@@ -87,6 +101,11 @@ export function SignIn() {
     <div className='flex min-h-svh items-center justify-center p-4'>
       <div className='w-full max-w-sm space-y-6'>
         <h1 className='text-center text-2xl font-semibold'>Sign in</h1>
+        {notice && (
+          <p className='rounded-md border border-destructive/50 bg-destructive/10 p-3 text-sm text-destructive'>
+            {notice}
+          </p>
+        )}
         <Button variant='outline' className='w-full' onClick={handleGoogle} type='button'>
           <svg className='mr-2 h-4 w-4' viewBox='0 0 24 24'>
             <path d='M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z' fill='#4285F4'/>
