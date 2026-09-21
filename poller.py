@@ -72,9 +72,13 @@ def process_job(job):
     except Exception as e:
         print(f"Job {job_id} failed: {e}")
         traceback.print_exc()
+        # Surfaces in the dashboard: jobs-card renders job.error_message on
+        # failed jobs, so the reason must land in both columns.
+        message = str(e)[:500]
         requests.patch(f"{BASE_URL}/jobs?id=eq.{job_id}", headers=HEADERS, json={
             "status": "failed",
-            "result_summary": str(e)[:500],
+            "error_message": message,
+            "result_summary": json.dumps({"error": message}),
             "completed_at": datetime.now().isoformat()
         })
 
